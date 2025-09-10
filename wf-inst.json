@@ -1,0 +1,788 @@
+{
+  "nodes": [
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "1",
+              "name": "SUPABASE_PROJECT_ID",
+              "type": "string",
+              "value": "hmrjgintfmoeuktlniea"
+            },
+            {
+              "id": "2",
+              "name": "SUPABASE_BUCKET_NAME",
+              "type": "string",
+              "value": "instagram-images"
+            },
+            {
+              "id": "3",
+              "name": "INSTAGRAM_BUSINESS_ACCOUNT_ID",
+              "type": "string",
+              "value": "17841476553079975"
+            },
+            {
+              "id": "4",
+              "name": "EMAIL_ADDRESS",
+              "type": "string",
+              "value": "boblizard976@gmail.com"
+            },
+            {
+              "id": "5",
+              "name": "REFERENCE_IMAGE",
+              "type": "string",
+              "value": "reference_image.png"
+            },
+            {
+              "id": "6",
+              "name": "PROFILE",
+              "type": "string",
+              "value": "Name: Clara Ramos\nAge: 25\nProfession: Adult Content Creator & Global Traveler"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "config-node",
+      "name": "Configure Workflow 3.0",
+      "type": "n8n-nodes-base.set",
+      "position": [
+        400,
+        304
+      ],
+      "typeVersion": 3.4
+    },
+    {
+      "parameters": {},
+      "id": "manual-trigger",
+      "name": "Manual Test",
+      "type": "n8n-nodes-base.manualTrigger",
+      "position": [
+        112,
+        208
+      ],
+      "typeVersion": 1
+    },
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "triggerAtHour": 9
+            },
+            {
+              "triggerAtHour": 14
+            },
+            {
+              "triggerAtHour": 19
+            }
+          ]
+        }
+      },
+      "id": "schedule-trigger",
+      "name": "Smart Schedule",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "position": [
+        112,
+        400
+      ],
+      "typeVersion": 1.1
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "id": "gemini-llm",
+      "name": "Gemini AI Model",
+      "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
+      "position": [
+        400,
+        512
+      ],
+      "typeVersion": 1,
+      "credentials": {
+        "googlePalmApi": {
+          "id": "gwfWU6vSyzViP18L",
+          "name": "Google Gemini(PaLM) Api account 2"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "get",
+        "tableId": "posts",
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "created_at",
+              "keyValue": "={{ $now.minus(30, 'days').toISO() }}"
+            }
+          ]
+        }
+      },
+      "id": "get-analytics",
+      "name": "Get Analytics Data",
+      "type": "n8n-nodes-base.supabase",
+      "position": [
+        608,
+        304
+      ],
+      "typeVersion": 1,
+      "alwaysOutputData": true,
+      "credentials": {
+        "supabaseApi": {
+          "id": "DWKh6X7HexEjFkxg",
+          "name": "Supabase account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForEachItem",
+        "jsCode": "// Add a new field called 'myNewField' to the JSON of the item\n$input.item.json.myNewField = 1;\n\nreturn $input.item;"
+      },
+      "id": "analyze-trends",
+      "name": "Analyze Trends",
+      "type": "n8n-nodes-base.code",
+      "position": [
+        800,
+        304
+      ],
+      "typeVersion": 2
+    },
+    {
+      "parameters": {
+        "text": "=Generate Instagram post for {{ $now.format('EEEE, MMMM dd') }}.\n\n<Profile>\n{{ $('Configure Workflow 3.0').item.json.PROFILE }}\n</Profile>\n\n<ContentType>{{ $('Analyze Trends').item.json.content_type }}</ContentType>\n\n<ClothingOptions>\nBikini: Brazilian, Thong, Triangle, Bandeau, Micro, String bikini\nColors: White, Black, Red, Pink, Gold metallic, Leopard print\nLingerie: Lace bralette, Satin chemise, Bodysuit, Sheer robe\n</ClothingOptions>\n\n<Requirements>\n- Specify exact clothing type and color\n- Natural, candid photography style\n- Maximum 30 hashtags\n</Requirements>",
+        "attributes": {
+          "attributes": [
+            {
+              "name": "caption",
+              "description": "Instagram caption",
+              "required": true
+            },
+            {
+              "name": "hashtags",
+              "description": "30 hashtags",
+              "required": true
+            },
+            {
+              "name": "image_prompt",
+              "description": "Image prompt",
+              "required": true
+            },
+            {
+              "name": "summary",
+              "description": "Brief summary",
+              "required": true
+            }
+          ]
+        },
+        "options": {
+          "systemPromptTemplate": "Create Instagram posts with ultra-realistic image prompts."
+        }
+      },
+      "id": "content-generator",
+      "name": "Generate Content AI",
+      "type": "@n8n/n8n-nodes-langchain.informationExtractor",
+      "position": [
+        912,
+        112
+      ],
+      "typeVersion": 1
+    },
+    {
+      "parameters": {
+        "text": "=Transform into ultra-realistic photography prompt:\n\n{{ $('Generate Content AI').item.json.output.image_prompt }}\n\nRequirements:\n- iPhone 15 Pro camera style\n- Natural lighting\n- Candid moment\n- NO WATERMARKS",
+        "attributes": {
+          "attributes": [
+            {
+              "name": "enhanced_prompt",
+              "description": "Enhanced prompt",
+              "required": true
+            }
+          ]
+        },
+        "options": {
+          "systemPromptTemplate": "Create ultra-realistic photography prompts."
+        }
+      },
+      "id": "enhance-prompt",
+      "name": "Enhance Prompt AI",
+      "type": "@n8n/n8n-nodes-langchain.informationExtractor",
+      "position": [
+        1232,
+        112
+      ],
+      "typeVersion": 1
+    },
+    {
+      "parameters": {
+        "action": "generate",
+        "dataPropertyName": "image_id"
+      },
+      "id": "generate-uuid",
+      "name": "Generate UUID",
+      "type": "n8n-nodes-base.crypto",
+      "position": [
+        1408,
+        304
+      ],
+      "typeVersion": 1
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.poe.com/v1/chat/completions",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "Bearer zNcynwtPu5u4ljuDfGjatoS7ub3jBoaNQLCqRed5Ong"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"model\": \"Flux-Kontext-Max\",\n  \"messages\": [\n    {\n      \"role\": \"user\",\n      \"content\": [\n        {\n          \"type\": \"text\",\n          \"text\": \"{{ $('Enhance Prompt AI').item.json.output.enhanced_prompt }}, ultra-realistic, iPhone 15 Pro, NO WATERMARKS\"\n        },\n        {\n          \"type\": \"image_url\",\n          \"image_url\": {\n            \"url\": \"https://{{ $('Configure Workflow 3.0').item.json.SUPABASE_PROJECT_ID }}.supabase.co/storage/v1/object/public/{{ $('Configure Workflow 3.0').item.json.SUPABASE_BUCKET_NAME }}/{{ $('Configure Workflow 3.0').item.json.REFERENCE_IMAGE }}\"\n          }\n        }\n      ]\n    }\n  ]\n}",
+        "options": {}
+      },
+      "id": "generate-image",
+      "name": "Generate Image AI",
+      "type": "n8n-nodes-base.httpRequest",
+      "position": [
+        1600,
+        304
+      ],
+      "typeVersion": 4.2,
+      "retryOnFail": true,
+      "maxTries": 3
+    },
+    {
+      "parameters": {
+        "url": "={{ $json.choices[0].message.content.split('\\n\\n')[1] }}",
+        "options": {}
+      },
+      "id": "download-image",
+      "name": "Download Image",
+      "type": "n8n-nodes-base.httpRequest",
+      "position": [
+        1808,
+        304
+      ],
+      "typeVersion": 4.2
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{ `https://${$('Configure Workflow 3.0').item.json.SUPABASE_PROJECT_ID}.supabase.co/storage/v1/object/${$('Configure Workflow 3.0').item.json.SUPABASE_BUCKET_NAME}/v3_${$('Generate UUID').item.json.image_id}.jpg` }}",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "supabaseApi",
+        "sendBody": true,
+        "contentType": "multipart-form-data",
+        "bodyParameters": {
+          "parameters": [
+            {
+              "parameterType": "formBinaryData",
+              "name": "file",
+              "inputDataFieldName": "data"
+            }
+          ]
+        },
+        "options": {
+          "response": {
+            "response": {
+              "fullResponse": true
+            }
+          }
+        }
+      },
+      "id": "upload-storage",
+      "name": "Upload Storage",
+      "type": "n8n-nodes-base.httpRequest",
+      "position": [
+        2000,
+        304
+      ],
+      "typeVersion": 4.2,
+      "credentials": {
+        "supabaseApi": {
+          "id": "DWKh6X7HexEjFkxg",
+          "name": "Supabase account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "1",
+              "name": "share_link",
+              "type": "string",
+              "value": "=https://{{ $('Configure Workflow 3.0').item.json.SUPABASE_PROJECT_ID }}.supabase.co/storage/v1/object/public/{{ $('Configure Workflow 3.0').item.json.SUPABASE_BUCKET_NAME }}/v3_{{ $('Generate UUID').item.json.image_id }}.jpg"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "create-link",
+      "name": "Create Link",
+      "type": "n8n-nodes-base.set",
+      "position": [
+        2208,
+        304
+      ],
+      "typeVersion": 3.4
+    },
+    {
+      "parameters": {
+        "tableId": "posts",
+        "fieldsUi": {
+          "fieldValues": [
+            {
+              "fieldId": "post_summary",
+              "fieldValue": "={{ $('Generate Content AI').item.json.output.summary }}"
+            },
+            {
+              "fieldId": "image_path",
+              "fieldValue": "={{ $('Configure Workflow 3.0').item.json.SUPABASE_BUCKET_NAME }}/v3_{{ $('Generate UUID').item.json.image_id }}.jpg"
+            }
+          ]
+        }
+      },
+      "id": "save-post",
+      "name": "Save Post DB",
+      "type": "n8n-nodes-base.supabase",
+      "position": [
+        2400,
+        304
+      ],
+      "typeVersion": 1,
+      "credentials": {
+        "supabaseApi": {
+          "id": "DWKh6X7HexEjFkxg",
+          "name": "Supabase account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "httpRequestMethod": "POST",
+        "graphApiVersion": "v22.0",
+        "node": "={{ $('Configure Workflow 3.0').item.json.INSTAGRAM_BUSINESS_ACCOUNT_ID }}",
+        "edge": "media",
+        "options": {
+          "queryParameters": {
+            "parameter": [
+              {
+                "name": "image_url",
+                "value": "={{ $('Create Link').item.json.share_link }}"
+              },
+              {
+                "name": "caption",
+                "value": "={{ $('Generate Content AI').item.json.output.caption }}\\n\\n{{ $('Generate Content AI').item.json.output.hashtags }}"
+              }
+            ]
+          }
+        }
+      },
+      "id": "create-ig-media",
+      "name": "Create IG Media",
+      "type": "n8n-nodes-base.facebookGraphApi",
+      "position": [
+        2608,
+        304
+      ],
+      "typeVersion": 1,
+      "credentials": {
+        "facebookGraphApi": {
+          "id": "dGxKl6OcflDZ4L0A",
+          "name": "Facebook Graph account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "httpRequestMethod": "POST",
+        "graphApiVersion": "v22.0",
+        "node": "={{ $('Configure Workflow 3.0').item.json.INSTAGRAM_BUSINESS_ACCOUNT_ID }}",
+        "edge": "media_publish",
+        "options": {
+          "queryParameters": {
+            "parameter": [
+              {
+                "name": "creation_id",
+                "value": "={{ $json.id }}"
+              }
+            ]
+          }
+        }
+      },
+      "id": "publish-ig",
+      "name": "Publish IG",
+      "type": "n8n-nodes-base.facebookGraphApi",
+      "position": [
+        2800,
+        304
+      ],
+      "typeVersion": 1,
+      "credentials": {
+        "facebookGraphApi": {
+          "id": "dGxKl6OcflDZ4L0A",
+          "name": "Facebook Graph account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "1",
+              "name": "status",
+              "type": "string",
+              "value": "success"
+            },
+            {
+              "id": "2",
+              "name": "completed_at",
+              "type": "string",
+              "value": "={{ $now.toISO() }}"
+            },
+            {
+              "id": "3",
+              "name": "workflow_version",
+              "type": "string",
+              "value": "3.0"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "log-complete",
+      "name": "Log Complete",
+      "type": "n8n-nodes-base.set",
+      "position": [
+        3008,
+        304
+      ],
+      "typeVersion": 3.4
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForEachItem",
+        "language": "javascript"
+      },
+      "id": "ab-testing",
+      "name": "AB Testing Captions",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1056,
+        496
+      ]
+    },
+    {
+      "parameters": {
+        "text": "=Create Instagram Story for this post:\n<Caption>{{ $('Generate Content AI').item.json.output.caption }}</Caption>\n<Requirements>\n- Short text (max 100 chars)\n- Interactive element (poll/quiz)\n- CTA to main post\n- 5 story hashtags\n- Emojis\n</Requirements>",
+        "attributes": {
+          "attributes": [
+            {
+              "name": "story_text",
+              "description": "Short story text",
+              "required": true
+            },
+            {
+              "name": "interactive",
+              "description": "Poll or quiz",
+              "required": true
+            },
+            {
+              "name": "cta",
+              "description": "Call-to-action",
+              "required": true
+            },
+            {
+              "name": "hashtags",
+              "description": "5 hashtags",
+              "required": true
+            }
+          ]
+        },
+        "options": {
+          "systemPromptTemplate": "Create engaging Instagram Story content."
+        }
+      },
+      "id": "story-gen",
+      "name": "Generate Story",
+      "type": "@n8n/n8n-nodes-langchain.informationExtractor",
+      "typeVersion": 1,
+      "position": [
+        1376,
+        720
+      ]
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForEachItem",
+        "language": "javascript"
+      },
+      "id": "carousel-support",
+      "name": "Carousel Support",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        960,
+        736
+      ]
+    },
+    {
+      "parameters": {
+        "subject": "✅ Instagram 3.0 Post Published - {{ $now.format('MMM dd, yyyy HH:mm') }}",
+        "options": {}
+      },
+      "id": "email-notif",
+      "name": "Email Success Notification",
+      "type": "n8n-nodes-base.emailSend",
+      "typeVersion": 2.1,
+      "position": [
+        3200,
+        208
+      ],
+      "webhookId": "36aac248-4e88-4594-91ec-a74758296287",
+      "continueOnFail": true
+    },
+    {
+      "parameters": {
+        "tableId": "performance_metrics",
+        "fieldsUi": {
+          "fieldValues": [
+            {
+              "fieldId": "post_id",
+              "fieldValue": "={{ $('Publish IG').item.json.id }}"
+            },
+            {
+              "fieldId": "published_at",
+              "fieldValue": "={{ $now.toISO() }}"
+            },
+            {
+              "fieldId": "content_type",
+              "fieldValue": "={{ $('Analyze Trends').item.json.content_type }}"
+            },
+            {
+              "fieldId": "ab_version",
+              "fieldValue": "={{ $('AB Testing Captions').item.json.test_version }}"
+            },
+            {
+              "fieldId": "is_carousel",
+              "fieldValue": "={{ $('Carousel Support').item.json.is_carousel }}"
+            }
+          ]
+        }
+      },
+      "id": "perf-dash",
+      "name": "Performance Dashboard",
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [
+        3200,
+        400
+      ],
+      "credentials": {
+        "supabaseApi": {
+          "id": "DWKh6X7HexEjFkxg",
+          "name": "Supabase account"
+        }
+      }
+    }
+  ],
+  "connections": {
+    "Configure Workflow 3.0": {
+      "main": [
+        [
+          {
+            "node": "Get Analytics Data",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Manual Test": {
+      "main": [
+        [
+          {
+            "node": "Configure Workflow 3.0",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Smart Schedule": {
+      "main": [
+        [
+          {
+            "node": "Configure Workflow 3.0",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Gemini AI Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Generate Content AI",
+            "type": "ai_languageModel",
+            "index": 0
+          },
+          {
+            "node": "Enhance Prompt AI",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get Analytics Data": {
+      "main": [
+        [
+          {
+            "node": "Analyze Trends",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Analyze Trends": {
+      "main": [
+        [
+          {
+            "node": "Generate Content AI",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Generate Content AI": {
+      "main": [
+        [
+          {
+            "node": "Enhance Prompt AI",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Enhance Prompt AI": {
+      "main": [
+        [
+          {
+            "node": "Generate UUID",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Generate UUID": {
+      "main": [
+        [
+          {
+            "node": "Generate Image AI",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Generate Image AI": {
+      "main": [
+        [
+          {
+            "node": "Download Image",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Download Image": {
+      "main": [
+        [
+          {
+            "node": "Upload Storage",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Upload Storage": {
+      "main": [
+        [
+          {
+            "node": "Create Link",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Create Link": {
+      "main": [
+        [
+          {
+            "node": "Save Post DB",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Save Post DB": {
+      "main": [
+        [
+          {
+            "node": "Create IG Media",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Create IG Media": {
+      "main": [
+        [
+          {
+            "node": "Publish IG",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Publish IG": {
+      "main": [
+        [
+          {
+            "node": "Log Complete",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "pinData": {},
+  "meta": {
+    "instanceId": "ee33775d125c62add604ab384267725ed8cebe9145285f106993a82ef0779182"
+  }
+}
